@@ -1,0 +1,13 @@
+{
+  "name": "@toolbox/vitest-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base": "./base.js"
+  },
+  "peerDependencies": {
+    "@types/node": ">=24.0.0 <25.0.0",
+    "vitest": ">=4.0.0"
+  }
+}

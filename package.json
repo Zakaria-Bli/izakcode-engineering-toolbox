@@ -1,0 +1,41 @@
+{
+  "name": "izakcode-engineering-toolbox",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "A personal engineering workspace for reusable modules, patterns, templates, and tooling.",
+  "packageManager": "pnpm@11.15.0",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=11 <12"
+  },
+  "scripts": {
+    "build": "pnpm -r --if-present build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "pnpm run test:root && pnpm run test:workspaces",
+    "test:root": "vitest run --passWithNoTests",
+    "test:watch": "vitest --passWithNoTests",
+    "test:workspaces": "pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "validate": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run test",
+    "audit:dependencies": "pnpm audit --audit-level moderate",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
+    "@toolbox/eslint-config": "workspace:*",
+    "@toolbox/prettier-config": "workspace:*",
+    "@toolbox/vitest-config": "workspace:*",
+    "@types/node": "24.13.3",
+    "eslint": "^10.7.0",
+    "husky": "^9.1.7",
+    "lint-staged": "17.1.0",
+    "prettier": "3.6.2",
+    "typescript": "7.0.2",
+    "vitest": "^4.1.10"
+  }
+}

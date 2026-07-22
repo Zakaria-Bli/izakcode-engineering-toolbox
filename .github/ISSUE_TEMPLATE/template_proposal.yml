@@ -1,0 +1,36 @@
+name: Template proposal
+description: Propose a project or feature starter template.
+title: "feat(template): "
+labels: [template, proposal]
+body:
+  - type: textarea
+    id: purpose
+    attributes:
+      label: Purpose
+      description: What should this template help start?
+    validations:
+      required: true
+  - type: textarea
+    id: contents
+    attributes:
+      label: Expected contents
+      description: List the files, tooling, examples, and docs the template should include.
+    validations:
+      required: true
+  - type: textarea
+    id: assumptions
+    attributes:
+      label: Assumptions
+      description: Runtime, framework, package manager, deployment, env, and database assumptions.
+    validations:
+      required: true
+  - type: textarea
+    id: excluded
+    attributes:
+      label: Explicitly excluded
+      description: What should not be included?
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation plan
+      description: How will the template be tested before reuse?

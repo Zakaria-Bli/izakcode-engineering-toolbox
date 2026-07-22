@@ -1,0 +1,4 @@
+packages:
+  - modules/*
+  - playgrounds/*
+  - tooling/*

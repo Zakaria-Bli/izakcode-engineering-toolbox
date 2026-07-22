@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+coverage/
+.turbo/
+
+# Framework outputs
+.next/
+.output/
+.vercel/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Logs
+*.log
+pnpm-debug.log*
+
+# Editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Operating systems
+.DS_Store
+Thumbs.db

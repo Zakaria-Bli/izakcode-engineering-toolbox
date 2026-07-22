@@ -1,0 +1,36 @@
+name: Module proposal
+description: Propose a reusable module blueprint.
+title: "feat(module): "
+labels: [module, proposal]
+body:
+  - type: textarea
+    id: purpose
+    attributes:
+      label: Purpose
+      description: What repeated project need does this module solve?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What should this module include and exclude?
+    validations:
+      required: true
+  - type: textarea
+    id: reuse-model
+    attributes:
+      label: Reuse model
+      description: How should this be copied, adapted, or validated across projects?
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: List required dependencies or state that none are required.
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation plan
+      description: How will this module be tested or proven useful?
