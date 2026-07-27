@@ -1,0 +1,53 @@
+{
+  "name": "@toolbox/auth",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "description": "Framework-agnostic authentication module blueprint for the engineering toolbox.",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "import": "./index.ts"
+    },
+    "./core": {
+      "types": "./src/core/index.ts",
+      "import": "./src/core/index.ts"
+    },
+    "./ports": {
+      "types": "./src/ports/ports.ts",
+      "import": "./src/ports/ports.ts"
+    },
+    "./services": {
+      "types": "./src/services/index.ts",
+      "import": "./src/services/index.ts"
+    },
+    "./adapters/express": {
+      "types": "./src/adapters/express/index.ts",
+      "import": "./src/adapters/express/index.ts"
+    },
+    "./adapters/next": {
+      "types": "./src/adapters/next/index.ts",
+      "import": "./src/adapters/next/index.ts"
+    },
+    "./adapters/node/token-generator": {
+      "types": "./src/adapters/node/token-generator.ts",
+      "import": "./src/adapters/node/token-generator.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@toolbox/eslint-config": "workspace:*",
+    "@toolbox/typescript-config": "workspace:*",
+    "@toolbox/vitest-config": "workspace:*",
+    "@types/node": "24.13.3",
+    "eslint": "^10.7.0",
+    "typescript": "7.0.2",
+    "vitest": "^4.1.10"
+  }
+}
