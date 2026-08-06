@@ -1,9 +1,10 @@
 import { readdir, readFile } from "node:fs/promises"
 import path from "node:path"
+import { fileURLToPath } from "node:url"
 
 import { describe, expect, it } from "vitest"
 
-const PACKAGE_ROOT = process.cwd()
+const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const PUBLIC_EXPORTS = [
   ".",
   "./core",
