@@ -1,0 +1,127 @@
+{
+  "name": "@toolbox/media-storage",
+  "version": "0.0.0",
+  "private": false,
+  "type": "module",
+  "sideEffects": false,
+  "description": "Framework-agnostic media storage module for direct uploads, lifecycle management, and pluggable object storage.",
+  "license": "MIT",
+  "keywords": [
+    "media-storage",
+    "direct-upload",
+    "s3",
+    "object-storage",
+    "image-processing"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "PUBLIC-CONTRACTS.md",
+    "API-REFERENCE.md",
+    "ADAPTERS.md",
+    "INTEGRATION.md",
+    "OPERATIONS.md",
+    "TROUBLESHOOTING.md",
+    "recipes",
+    "examples",
+    "integration"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/src/core/index.d.ts",
+      "import": "./dist/src/core/index.js"
+    },
+    "./domain": {
+      "types": "./dist/src/domain/index.d.ts",
+      "import": "./dist/src/domain/index.js"
+    },
+    "./ports": {
+      "types": "./dist/src/ports/index.d.ts",
+      "import": "./dist/src/ports/index.js"
+    },
+    "./testing": {
+      "types": "./dist/src/testing/index.d.ts",
+      "import": "./dist/src/testing/index.js"
+    },
+    "./adapters/s3": {
+      "types": "./dist/src/adapters/s3/index.d.ts",
+      "import": "./dist/src/adapters/s3/index.js"
+    },
+    "./adapters/local": {
+      "types": "./dist/src/adapters/local/index.d.ts",
+      "import": "./dist/src/adapters/local/index.js"
+    },
+    "./adapters/sharp": {
+      "types": "./dist/src/adapters/sharp/index.d.ts",
+      "import": "./dist/src/adapters/sharp/index.js"
+    },
+    "./adapters/content-inspector": {
+      "types": "./dist/src/adapters/content-inspector/index.d.ts",
+      "import": "./dist/src/adapters/content-inspector/index.js"
+    },
+    "./adapters/express": {
+      "types": "./dist/src/adapters/express/index.d.ts",
+      "import": "./dist/src/adapters/express/index.js"
+    },
+    "./adapters/next": {
+      "types": "./dist/src/adapters/next/index.d.ts",
+      "import": "./dist/src/adapters/next/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "lint": "eslint .",
+    "pack:dry-run": "pnpm pack --dry-run",
+    "prepack": "pnpm run build",
+    "test": "vitest run --passWithNoTests",
+    "test:integration:s3": "MEDIA_STORAGE_S3_INTEGRATION=1 vitest run tests/s3-compatible.integration.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1098.0",
+    "@aws-sdk/s3-presigned-post": "^3.1100.0",
+    "@aws-sdk/s3-request-presigner": "^3.1098.0",
+    "@toolbox/eslint-config": "workspace:*",
+    "@toolbox/typescript-config": "workspace:*",
+    "@toolbox/vitest-config": "workspace:*",
+    "@types/node": "24.13.3",
+    "eslint": "^10.7.0",
+    "sharp": "^0.35.3",
+    "typescript": "7.0.2",
+    "vitest": "^4.1.10"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-s3": ">=3.1063 <4",
+    "@aws-sdk/s3-presigned-post": ">=3.1063 <4",
+    "@aws-sdk/s3-request-presigner": ">=3.1063 <4",
+    "sharp": ">=0.34.0 <1"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-s3": {
+      "optional": true
+    },
+    "@aws-sdk/s3-presigned-post": {
+      "optional": true
+    },
+    "@aws-sdk/s3-request-presigner": {
+      "optional": true
+    },
+    "sharp": {
+      "optional": true
+    }
+  }
+}

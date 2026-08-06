@@ -1,0 +1,12 @@
+{
+  "extends": "@toolbox/typescript-config/base.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["index.ts", "src/**/*.ts", "tests/**/*.ts", "examples/**/*.ts"],
+  "exclude": ["build", "coverage", "dist", "node_modules"]
+}
