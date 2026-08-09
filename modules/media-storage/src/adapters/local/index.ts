@@ -115,10 +115,10 @@ export function verifyLocalUploadSignature(
 function isErrnoCode(error: unknown, code: string): boolean {
   return Boolean(
     error &&
-      typeof error === "object" &&
-      "code" in error &&
-      typeof error.code === "string" &&
-      error.code === code
+    typeof error === "object" &&
+    "code" in error &&
+    typeof error.code === "string" &&
+    error.code === code
   )
 }
 

@@ -114,9 +114,9 @@ export function detectMimeTypeFromMagicBytes(buffer: Buffer): string | null {
   return null
 }
 
-export class BasicContentInspector<TKind extends string = MediaAssetKind>
-  implements ContentInspector<TKind>
-{
+export class BasicContentInspector<
+  TKind extends string = MediaAssetKind,
+> implements ContentInspector<TKind> {
   private readonly strictMimeTypes: Set<string>
   private readonly allowedMimeAliases: Map<string, Set<string>>
   private readonly rejectDetectedMismatch: boolean
