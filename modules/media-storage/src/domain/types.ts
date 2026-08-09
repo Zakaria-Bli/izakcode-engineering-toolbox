@@ -176,8 +176,9 @@ export interface GetAssetInput<
   actorId?: TActorId | null
 }
 
-export interface ListAssetsInput<TActorId extends MediaActorId = MediaActorId>
-  extends ListAssetsFilters {
+export interface ListAssetsInput<
+  TActorId extends MediaActorId = MediaActorId,
+> extends ListAssetsFilters {
   actorId?: TActorId | null
 }
 

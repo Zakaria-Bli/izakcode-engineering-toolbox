@@ -20,8 +20,7 @@ export interface MediaRepositoryContractHarness<
   TKind extends string = MediaAssetKind,
 > {
   createRepository():
-    | MediaRepository<TAssetId, TActorId, TKind>
-    | Promise<MediaRepository<TAssetId, TActorId, TKind>>
+    MediaRepository<TAssetId, TActorId, TKind> | Promise<MediaRepository<TAssetId, TActorId, TKind>>
   cleanupRepository?(repository: MediaRepository<TAssetId, TActorId, TKind>): Promise<void> | void
   kind: TKind
   actorId?: TActorId | null
