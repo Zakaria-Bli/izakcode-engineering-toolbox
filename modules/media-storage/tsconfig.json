@@ -4,6 +4,10 @@
     "lib": ["ES2022"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "paths": {
+      "@toolbox/media-storage": ["./index.ts"],
+      "@toolbox/media-storage/*": ["./src/*/index.ts"]
+    },
     "noEmit": true,
     "types": ["node"]
   },
