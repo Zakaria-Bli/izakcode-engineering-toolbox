@@ -94,7 +94,7 @@
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.1098.0",
     "@aws-sdk/s3-presigned-post": "^3.1100.0",
-    "@aws-sdk/s3-request-presigner": "^3.1098.0",
+    "@aws-sdk/s3-request-presigner": "^3.1105.0",
     "@toolbox/eslint-config": "workspace:*",
     "@toolbox/typescript-config": "workspace:*",
     "@toolbox/vitest-config": "workspace:*",
