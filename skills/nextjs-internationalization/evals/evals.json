@@ -1,0 +1,44 @@
+{
+  "skill_name": "nextjs-internationalization",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add internationalization to this fresh Next.js App Router app with English and Arabic, Arabic RTL support, locale-prefixed URLs for every locale, and a language switcher in the header.",
+      "expected_output": "A next-intl setup with centralized locale config, routing/request/navigation modules, proxy or middleware, [locale] layout, messages, RTL dir/font handling, and a switcher that preserves the current pathname.",
+      "files": [],
+      "expectations": [
+        "Creates a single source of truth for locales including direction metadata",
+        "Uses next-intl routing, request config, plugin, and createNavigation helpers",
+        "Places public routes under [locale] and sets html lang and dir",
+        "Implements a locale switcher without manual URL rewriting",
+        "Adds RTL/font strategy and validation steps"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Migrate an existing Next.js 16 App Router project that has public pages, API routes, and a Payload admin area so the public site supports English, Arabic, and French. Keep admin and API routes unlocalized, localize Payload content, and make metadata/caching locale-aware.",
+      "expected_output": "A migration plan and code patterns that use src/proxy.ts with matcher exclusions, route groups with [locale] only for the frontend, Payload locales derived from i18n config, localized fields/queries, locale-aware cache keys, and localized metadata.",
+      "files": [],
+      "expectations": [
+        "Uses proxy.ts for Next.js 16 and excludes admin/API/static paths",
+        "Derives Payload locales from frontend locale config",
+        "Passes locale into CMS queries and cache keys",
+        "Keeps CMS content separate from JSON UI messages",
+        "Addresses localized metadata and canonical URL policy"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Review this partially internationalized Next.js app. It has next-intl installed, but links are manually prefixed with /en, the language switcher string-replaces pathnames, RTL only works on a few components, and cached CMS queries do not include locale. Tell me what to fix and in what order.",
+      "expected_output": "A diagnosis and ordered remediation workflow that centralizes locale config/navigation, replaces manual links with createNavigation Link, rewrites the switcher to use usePathname plus locale prop, moves RTL to html dir/global/logical utilities, and fixes locale-aware data/cache/metadata.",
+      "files": [],
+      "expectations": [
+        "Identifies duplicated/manual locale routing as an anti-pattern",
+        "Prioritizes source-of-truth config and navigation helpers before component fixes",
+        "Fixes language switcher via next-intl Link locale prop",
+        "Fixes RTL at html dir plus logical CSS and behavior layers",
+        "Adds locale to CMS query and cache boundaries"
+      ]
+    }
+  ]
+}

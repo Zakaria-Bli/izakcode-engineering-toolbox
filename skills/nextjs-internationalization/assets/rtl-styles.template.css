@@ -1,0 +1,41 @@
+/* Direction-aware typography. Adapt font variable names to your layout. */
+[dir="rtl"] body {
+  font-family: var(--font-arabic), sans-serif;
+}
+
+[dir="ltr"] body {
+  font-family: var(--font-latin), sans-serif;
+}
+
+/* Root direction is semantic; most components should respond to this. */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+/* Legacy utility fallbacks. Prefer text-start/text-end and logical utilities in new code. */
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+[dir="rtl"] .ml-auto {
+  margin-right: auto;
+  margin-left: 0;
+}
+
+[dir="rtl"] .mr-auto {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+/* Example direction-aware drawer variable. */
+[dir="rtl"] #mobile-menu-drawer {
+  --mobile-menu-translate: -100%;
+}
+
+[dir="ltr"] #mobile-menu-drawer {
+  --mobile-menu-translate: 100%;
+}

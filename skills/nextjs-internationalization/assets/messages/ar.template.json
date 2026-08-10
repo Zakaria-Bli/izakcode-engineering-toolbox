@@ -1,0 +1,15 @@
+{
+  "common": {
+    "language": "اللغة",
+    "toggleLanguage": "تغيير اللغة"
+  },
+  "header": {
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة",
+    "navigation": "التنقل الرئيسي"
+  },
+  "metadata": {
+    "title": "استبدل بعنوان الموقع",
+    "description": "استبدل بوصف الموقع"
+  }
+}

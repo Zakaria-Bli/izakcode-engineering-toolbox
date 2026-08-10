@@ -21,6 +21,7 @@ export const config = defineConfig(
       "build/**",
       "coverage/**",
       "node_modules/**",
+      "skills/**/assets/**/*.template.*",
       ".turbo/**",
       ".next/**",
       ".output/**",

@@ -16,7 +16,7 @@ APIs have been validated across real projects.
 - `patterns/` — documented architectural and implementation approaches
 - `snippets/` — small reusable code fragments and examples
 - `templates/` — project and feature starters
-- `skills/` — reusable agent skills, rules, and scaffolding workflows
+- `skills/` — reusable agent skills and workflow instructions (see `skills/README.md`)
 - `playgrounds/` — runnable integration and experimentation environments
 - `tooling/` — shared development configuration and repository tooling
 - `scripts/` — repository maintenance and automation scripts

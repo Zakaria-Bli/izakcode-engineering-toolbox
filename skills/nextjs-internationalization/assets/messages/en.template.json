@@ -1,0 +1,15 @@
+{
+  "common": {
+    "language": "Language",
+    "toggleLanguage": "Toggle language"
+  },
+  "header": {
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "navigation": "Main navigation"
+  },
+  "metadata": {
+    "title": "Replace with site title",
+    "description": "Replace with site description"
+  }
+}
