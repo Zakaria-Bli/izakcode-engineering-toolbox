@@ -1,7 +1,7 @@
 # iZakCode Engineering Toolbox
 
 A personal engineering workspace for developing, documenting, validating,
-and evolving reusable modules, patterns, templates, and tooling.
+and evolving reusable modules, patterns, templates, skills, and tooling.
 
 ## Purpose
 
@@ -16,6 +16,7 @@ APIs have been validated across real projects.
 - `patterns/` — documented architectural and implementation approaches
 - `snippets/` — small reusable code fragments and examples
 - `templates/` — project and feature starters
+- `skills/` — reusable agent skills, rules, and scaffolding workflows
 - `playgrounds/` — runnable integration and experimentation environments
 - `tooling/` — shared development configuration and repository tooling
 - `scripts/` — repository maintenance and automation scripts
