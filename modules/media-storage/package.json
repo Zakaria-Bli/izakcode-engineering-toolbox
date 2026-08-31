@@ -100,7 +100,7 @@
     "@toolbox/vitest-config": "workspace:*",
     "@types/node": "24.13.3",
     "eslint": "^10.8.1",
-    "sharp": "^0.35.3",
+    "sharp": "^0.35.4",
     "typescript": "7.0.2",
     "vitest": "^4.1.10"
   },
