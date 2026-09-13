@@ -102,7 +102,7 @@
     "eslint": "^10.9.1",
     "sharp": "^0.35.4",
     "typescript": "7.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.0"
   },
   "peerDependencies": {
     "@aws-sdk/client-s3": ">=3.1063 <4",
