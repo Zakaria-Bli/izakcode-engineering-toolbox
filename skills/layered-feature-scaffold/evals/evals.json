@@ -1,0 +1,69 @@
+{
+  "skill_name": "layered-feature-scaffold",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "add a reviews feature to this next.js app (features live in src/features, tsconfig has @/* -> ./src/*). a review has a productId, rating 1-5 and an optional comment, and a user can only review a product once. we send the product owner an email when a review is posted.",
+      "expected_output": "A scaffolded src/features/review folder wired with the @/lib alias, with the given fields, schema, and business rules filled in: the one-review-per-user rule backed by a unique constraint and mapped from UniqueViolationError, and the owner email sent from the use case via a gateway rather than the controller.",
+      "files": [],
+      "expectations": [
+        "Runs scaffold_feature.py with --feature review (singular), --path src/features, and --lib-import @/lib",
+        "Fills in the domain fields and the zod schema (rating constrained to 1-5, optional comment) instead of leaving them as TODOs",
+        "Enforces one review per user per product with a database unique constraint, translated by the repo and mapped to a domain error in the service, not only a pre-check",
+        "Sends the owner notification from the createReview use case through a .gateway.ts file, not from the controller",
+        "index.ts exports use cases, types, and errors from services/domain and does not export controllers or the repo"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Can you review this before I merge? features/billing/billing.services.ts has `import { getOrderAction } from \"@/features/order\"` and calls it to load the order, features/order/index.ts has `export { getOrderAction, createOrderAction } from \"./order.controllers\"`, and order.controllers.ts imports `redirect` from next/navigation for createOrderAction. Also billing/lib/stripe.client.ts wraps the Stripe SDK and the controller calls it directly to charge the card after createInvoice() returns.",
+      "expected_output": "A review that flags the controller re-export from index.ts (it drags next/navigation into billing's service), recommends exporting the getOrder use case instead, moves the Stripe charge into the use case with an explicit failure policy, and suggests renaming stripe.client.ts to stripe.gateway.ts.",
+      "files": [],
+      "expectations": [
+        "Flags that order/index.ts re-exports controllers and that importing it pulls next/navigation into billing's service",
+        "Recommends re-exporting the underlying service use case (e.g. getOrder) from index.ts instead of controller functions",
+        "Flags that charging the card from the controller makes the business effect depend on the caller, and moves it into the billing use case",
+        "Addresses failure handling between the charge and the DB write (idempotency key, ordering, or outbox) rather than assuming the transaction covers it",
+        "Suggests renaming stripe.client.ts to stripe.gateway.ts and explains the Remix/React Router bundling issue or naming collision"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "In our layered setup, signing up should create the user AND their first workspace atomically. users live in features/user and workspaces in features/workspace. where should this go and how do I do the transaction without leaking drizzle types into services? also set up lint so nobody imports workspace.repo from the user feature.",
+      "expected_output": "A design where the user signup use case calls the workspace feature's createWorkspace use case through its index.ts, passing an opaque Tx via withTransaction(fn, outer), plus the ESLint boundaries template installed and adjusted to the project layout.",
+      "files": [],
+      "expectations": [
+        "Puts the orchestration in a service use case (e.g. user.services.ts signUp), not a controller",
+        "Calls workspace's use case via features/workspace index.ts, never workspace.repo.ts",
+        "Neither user.services.ts nor any other service imports a controllers file (its own or workspace's); the workspace call goes to a use case",
+        "Uses withTransaction with an opaque Tx and passes it to the other feature's use case so both writes share one transaction (join, not nest)",
+        "Keeps drizzle types confined to repos, including transaction.repo.ts",
+        "Installs assets/eslint-boundaries.template.mjs (with eslint-plugin-boundaries and the TypeScript resolver) and adjusts its project-layout block"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "quick q - in features/auth/auth.controllers.ts I just need to look up a user by email to show a 'did you mean to sign in?' hint. is it ok to import findUserByEmail from auth.repo directly since it's just a read? feels silly to write a service for it",
+      "expected_output": "A direct answer that controllers never import repos, even for reads, with the one-line service wrapper to add and the reason (single lintable rule, a place for future policy such as enumeration prevention).",
+      "files": [],
+      "expectations": [
+        "Says no: controllers never import *.repo.ts, including simple reads",
+        "Shows or names a small service function (e.g. getUserByEmail) in auth.services.ts that the controller calls instead",
+        "Gives a reason beyond 'the rule says so' (one lintable boundary, or a home for future rules/authorization)",
+        "Notes that revealing whether an account exists is an account-enumeration concern that belongs in the use case, not a trivial guard"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "where should password hashing and the 'password must be 12+ chars with a number' rule live in our layered features/auth setup? we use argon2.",
+      "expected_output": "Hashing as a pure utility in a .core.ts file (no framework, importable by services), the strength rule as input-shape validation in lib/auth.validations.ts and/or a Password value object invariant in auth.domain.ts, and the service calling both during registration.",
+      "files": [],
+      "expectations": [
+        "Places argon2 hashing/verification in a .core.ts utility (or a gateway-free lib helper), not in controllers or the repo",
+        "Places the length/number rule in lib/auth.validations.ts and/or as a single-type invariant in auth.domain.ts, not in the repo",
+        "Has the registration use case in auth.services.ts call the hashing helper before persisting through the repo",
+        "Does not put hashing or password rules in the controller"
+      ]
+    }
+  ]
+}
