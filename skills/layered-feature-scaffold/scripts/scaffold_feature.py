@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
 Scaffold a new feature folder following the Pragmatic Layered Architecture:
-controllers / services / repo / domain / validations / index.ts
+controllers / services / repo / domain / validations / index.ts, plus the
+shared transaction and persistence-error helpers (created once per project).
 
 Usage:
     python scaffold_feature.py --feature order --path src/features
-    python scaffold_feature.py --feature order --path src/features --client mailer
+    python scaffold_feature.py --feature order --path src/features --lib-import @/lib
+    python scaffold_feature.py --feature order --path src/features --gateway mailer
     python scaffold_feature.py --feature order --path src/features --force
 """
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -34,13 +37,88 @@ def to_kebab_case(name: str) -> str:
     return s.lower().strip("-")
 
 
+def lib_specifier(from_dir: Path, lib_dir: Path, lib_import: str | None) -> str:
+    """Import prefix for the shared lib dir as seen from from_dir: the alias if given, else a relative path."""
+    if lib_import:
+        return lib_import.rstrip("/")
+    rel = Path(os.path.relpath(lib_dir, from_dir)).as_posix()
+    return rel if rel.startswith(".") else f"./{rel}"
+
+
 # Templates use $Placeholder substitution (string.Template), not str.format(),
 # since the generated TypeScript is full of literal { } braces that would
 # collide with .format()'s escaping rules.
 
+TRANSACTION_REPO_TS = '''// transaction.repo.ts
+// Shared transaction boundary. It is a .repo.ts file because it touches the
+// ORM; feature repos re-export withTransaction, and services only ever see
+// the opaque Tx type, so ORM types never leak past the repo layer.
+
+// import { db } from "@/db" // TODO: wire up your ORM client
+
+declare const txBrand: unique symbol
+
+/** Opaque transaction handle: services can pass it along but not use it. */
+export type Tx = { readonly [txBrand]: true }
+
+/**
+ * Runs fn inside one transaction. Pass the caller's tx as `outer` to join it
+ * instead of nesting -- the outermost caller owns commit/rollback. Throwing
+ * inside fn rolls everything back, so don't swallow errors inside it.
+ */
+export async function withTransaction<T>(fn: (tx: Tx) => Promise<T>, outer?: Tx): Promise<T> {
+  if (outer) return fn(outer)
+  // TODO: return db.transaction((ormTx) => fn(ormTx as unknown as Tx))
+  throw new Error("withTransaction not implemented")
+}
+
+// Repo-only helper: turn the opaque handle back into the ORM executor.
+// export function executor(tx?: Tx) {
+//   return (tx as unknown as typeof db | undefined) ?? db
+// }
+'''
+
+PERSISTENCE_ERRORS_CORE_TS = '''// persistence-errors.core.ts
+// Neutral persistence errors. Repos translate ORM/driver errors into these so
+// raw ORM errors never escape the repo layer; services map them to domain
+// errors (e.g. UniqueViolationError on users_email_key -> EmailTakenError).
+
+export class PersistenceError extends Error {
+  constructor(message: string, readonly constraint?: string) {
+    super(message)
+    this.name = "PersistenceError"
+  }
+}
+
+/** A unique constraint rejected the write (duplicate key). */
+export class UniqueViolationError extends PersistenceError {
+  constructor(constraint?: string) {
+    super("Unique constraint violated", constraint)
+    this.name = "UniqueViolationError"
+  }
+}
+
+/** A foreign key constraint rejected the write (missing or still-referenced row). */
+export class ForeignKeyViolationError extends PersistenceError {
+  constructor(constraint?: string) {
+    super("Foreign key constraint violated", constraint)
+    this.name = "ForeignKeyViolationError"
+  }
+}
+
+/** Optimistic-lock mismatch or serialization failure; the use case may be retried. */
+export class ConcurrentUpdateError extends PersistenceError {
+  constructor() {
+    super("Concurrent update detected")
+    this.name = "ConcurrentUpdateError"
+  }
+}
+'''
+
 DOMAIN_TS = '''// $kebab.domain.ts
-// Domain types & domain errors for the "$kebab" feature.
-// This file is the feature's data contract -- no ORM types, no framework types.
+// Domain types, domain errors, and value objects for the "$kebab" feature.
+// Invariants a single type enforces on itself belong here; rules that need
+// repo/gateway data belong in $kebab.services.ts. No ORM or framework types.
 
 export interface $Pascal {
   id: number
@@ -63,88 +141,91 @@ export class ${Pascal}ForbiddenError extends Error {
 '''
 
 REPO_TS = '''// $kebab.repo.ts
-// The only file that knows about the ORM for "$kebab".
-// Map DB rows -> domain types here. No business logic, no thrown domain errors.
+// The only feature file that touches the ORM for "$kebab". Maps DB rows to
+// domain types and translates driver errors into the neutral errors from
+// persistence-errors.core.ts. No business rules, no domain errors.
 
+import type { Tx } from "$lib/transaction.repo"
 import type { $Pascal } from "./$kebab.domain"
 
-// import { db } from "@/db" // TODO: uncomment and wire up your ORM
+// import { db } from "@/db" // TODO: wire up your ORM
 // import { ${camel}Table } from "@/db/schema"
+// import { UniqueViolationError } from "$lib/persistence-errors.core"
 
-export async function find${Pascal}ById(id: number): Promise<$Pascal | null> {
-  // TODO: replace with real query
-  // const row = await db.query.${camel}Table.findFirst({ where: eq(${camel}Table.id, id) })
+export { type Tx, withTransaction } from "$lib/transaction.repo"
+
+export async function find${Pascal}ById(id: number, tx?: Tx): Promise<$Pascal | null> {
+  // TODO: replace with a real query run on executor(tx)
+  // const row = await executor(tx).query.${camel}Table.findFirst({ where: eq(${camel}Table.id, id) })
   // return row ? mapRowTo$Pascal(row) : null
   throw new Error("find${Pascal}ById not implemented")
 }
 
-export async function create$Pascal(data: Omit<$Pascal, "id">): Promise<$Pascal> {
-  // TODO: replace with real insert
-  throw new Error("create$Pascal not implemented")
+export async function insert$Pascal(data: Omit<$Pascal, "id">, tx?: Tx): Promise<$Pascal> {
+  // TODO: replace with a real insert, translating driver errors:
+  // try { ... } catch (error) {
+  //   if (isUniqueViolation(error)) throw new UniqueViolationError(error.constraint)
+  //   throw error
+  // }
+  throw new Error("insert$Pascal not implemented")
 }
 
-/**
- * Transaction boundary -- exposed here so services can compose multiple repo
- * calls atomically without importing the ORM directly.
- *
- * export async function withTransaction<T>(fn: (tx: TxContext) => Promise<T>): Promise<T> {
- *   return db.transaction(fn)
- * }
- */
-
-// function mapRowTo$Pascal(row: unknown): $Pascal {
+// function mapRowTo$Pascal(row: typeof ${camel}Table.$$inferSelect): $Pascal {
 //   // TODO: map ORM row -> domain type
 // }
 '''
 
 SERVICES_TS = '''// $kebab.services.ts
-// Business rules & validation for "$kebab". May call repo functions and
-// external clients. Must never import the ORM directly or any framework API
-// (cookies, headers, etc.).
+// Use cases for "$kebab": workflow rules, authorization decisions, and
+// business effects (persistence via the repo, third-party I/O via gateways).
+// No ORM, no framework/transport APIs (cookies, headers, redirects), no
+// .server.ts imports. Use cases re-exported from index.ts are the feature's
+// public API, so keep them transport-independent.
 
-import { find${Pascal}ById, create$Pascal } from "./$kebab.repo"
-import type { $Pascal } from "./$kebab.domain"
-import { ${Pascal}NotFoundError } from "./$kebab.domain"
+import { type $Pascal, ${Pascal}NotFoundError } from "./$kebab.domain"
+import { find${Pascal}ById, insert$Pascal, type Tx, withTransaction } from "./$kebab.repo"
 
-export async function get$Pascal(id: number): Promise<$Pascal> {
-  const $camel = await find${Pascal}ById(id) // repo call for a business decision
+export async function get$Pascal(id: number, tx?: Tx): Promise<$Pascal> {
+  const $camel = await find${Pascal}ById(id, tx)
   if (!$camel) throw new ${Pascal}NotFoundError()
   return $camel
 }
 
-export async function create${Pascal}WithValidation(
-  data: Omit<$Pascal, "id">
-): Promise<$Pascal> {
-  // TODO: apply business rules / invariants here before persisting
-  return create$Pascal(data)
+// Takes an optional tx so another feature's use case can run this inside its
+// own transaction; without one, it opens its own.
+export async function create$Pascal(data: Omit<$Pascal, "id">, tx?: Tx): Promise<$Pascal> {
+  return withTransaction(async (activeTx) => {
+    // TODO: workflow rules / authorization before persisting
+    // TODO: map persistence errors to domain errors, e.g.
+    //   UniqueViolationError -> ${Pascal}AlreadyExistsError
+    return insert$Pascal(data, activeTx)
+  }, tx)
 }
 '''
 
 CONTROLLERS_TS = '''// $kebab.controllers.ts
-// Orchestrates requests: parses input, calls services, handles HTTP/session/
-// cookies/redirects. No business rules and NEVER a direct repo import --
-// always go through $kebab.services.ts, even for simple reads.
+// Transport adapter for "$kebab": parse input, resolve the current user from
+// the session and pass it to use cases explicitly, call services, map domain
+// errors to responses, and own transport effects (cookies, headers,
+// redirects, cache revalidation). Imported only by the routing layer (app/
+// pages, route handlers, server actions; Express routers) -- other features
+// use index.ts instead. Never imports a repo, not even for a simple read.
 //
-// The functions below are side-effect-free (no cookies/redirects), so they
-// are safe to re-export from index.ts for cross-feature use. If you add a
-// handler that calls cookies()/redirect(), keep it feature-private and
-// expose a side-effect-free variant instead (see the architecture doc's
-// "HTTP-Bound vs. Exportable Functions" section).
+// Next.js: adding "use server" here turns every export into a public
+// endpoint, so each one must authenticate and authorize on its own.
 
 import { create${Pascal}Schema } from "./lib/$kebab.validations"
-import { get$Pascal, create${Pascal}WithValidation } from "./$kebab.services"
+import { create$Pascal, get$Pascal } from "./$kebab.services"
 
 export async function get${Pascal}Action(id: number) {
-  const $camel = await get$Pascal(id) // service call, no HTTP side effects
-  return $camel
+  // TODO: map domain errors to responses (${Pascal}NotFoundError -> 404)
+  return get$Pascal(id)
 }
 
 export async function create${Pascal}Action(formData: unknown) {
-  const dto = create${Pascal}Schema.parse(formData) // input shape validation only
-  const $camel = await create${Pascal}WithValidation(dto) // service call
-  // TODO: if this needs HTTP side effects (cookies, redirect, revalidation),
-  // add a SEPARATE handler for routes (e.g. create${Pascal}Route) and keep
-  // this one side-effect-free for cross-feature/index.ts use.
+  const dto = create${Pascal}Schema.parse(formData) // input shape only
+  const $camel = await create$Pascal(dto) // business effects happen in the use case
+  // TODO: transport effects go here (redirect, revalidatePath, set-cookie)
   return $camel
 }
 '''
@@ -167,37 +248,40 @@ export const create${Pascal}Schema = z.object({
 //   })
 '''
 
-INDEX_TS = '''// index.ts -- public API for the "$kebab" feature.
-// Only SIDE-EFFECT-FREE controller functions and public domain types are
-// exported here (no cookies/headers/redirects -- those stay feature-private).
-// Never export $kebab.services.ts or $kebab.repo.ts across feature boundaries.
+INDEX_TS = '''// index.ts -- public API of the "$kebab" feature, importable by other features.
+// Exports transport-independent use cases plus public domain types, errors,
+// and value objects. Never export the repo (callers would bypass the use
+// cases) or the controllers (importing them would drag framework code into
+// the caller); the routing layer imports $kebab.controllers.ts directly.
 
-export { get${Pascal}Action, create${Pascal}Action } from "./$kebab.controllers"
 export type { $Pascal } from "./$kebab.domain"
+export { ${Pascal}ForbiddenError, ${Pascal}NotFoundError } from "./$kebab.domain"
+export { create$Pascal, get$Pascal } from "./$kebab.services"
 '''
 
-CLIENT_SHARED_TS = '''// src/lib/$client_kebab.client.ts
-// SHARED external-service client for "$client_kebab" -- used by 2+ features.
-// Wraps the raw third-party SDK. Third-party I/O only, no business logic.
-// Services and controllers in any feature may import this directly.
+GATEWAY_SHARED_TS = '''// $gateway_kebab.gateway.ts
+// SHARED gateway for "$gateway_kebab" -- used by 2+ features. Wraps the raw
+// third-party SDK: the call and response mapping only, no business logic.
+// Services in any feature may import it; whether a failure fails the use
+// case or gets retried is the calling service's decision.
 
-export async function call$ClientPascal(/* TODO: params */): Promise<void> {
+export async function call$GatewayPascal(/* TODO: params */): Promise<void> {
   // TODO: implement the third-party call
-  throw new Error("call${ClientPascal} not implemented")
+  throw new Error("call${GatewayPascal} not implemented")
 }
 '''
 
-CLIENT_LOCAL_TS = '''// lib/$client_kebab.client.ts
-// FEATURE-LOCAL wrapper over the shared $client_kebab client, with this
+GATEWAY_LOCAL_TS = '''// lib/$gateway_kebab.gateway.ts
+// FEATURE-LOCAL wrapper over the shared $gateway_kebab gateway, with this
 // feature's own defaults/config. Third-party I/O only, no business logic.
-// Only create this if the feature needs its own config -- otherwise import
-// the shared client from src/lib/$client_kebab.client.ts directly.
+// Only keep this file if the feature needs its own config -- otherwise import
+// the shared gateway directly.
 
-// import { call$ClientPascal as callShared$ClientPascal } from "@/lib/$client_kebab.client"
+// import { call$GatewayPascal as callShared$GatewayPascal } from "$lib/$gateway_kebab.gateway"
 
-export async function call$ClientPascal(/* TODO: params */): Promise<void> {
-  // TODO: call the shared client with this feature's specific config
-  throw new Error("call${ClientPascal} not implemented")
+export async function call$GatewayPascal(/* TODO: params */): Promise<void> {
+  // TODO: call the shared gateway with this feature's specific config
+  throw new Error("call${GatewayPascal} not implemented")
 }
 '''
 
@@ -218,10 +302,26 @@ def main():
     parser = argparse.ArgumentParser(description="Scaffold a Pragmatic Layered Architecture feature")
     parser.add_argument("--feature", required=True, help="Feature/domain name, e.g. 'order' or 'order-item'")
     parser.add_argument("--path", required=True, help="Base features path, e.g. 'src/features'")
-    parser.add_argument("--client", default=None, help="Optional external client name to scaffold, e.g. 'mailer'")
     parser.add_argument(
-        "--client-scope", choices=["local", "shared"], default="local",
-        help="Where to put --client: 'local' (feature's lib/, default) or 'shared' (src/lib/, for use by 2+ features)",
+        "--lib-path", default=None,
+        help="Shared lib dir for transaction/persistence helpers and shared gateways "
+             "(default: 'lib' next to --path, e.g. src/lib for src/features)",
+    )
+    parser.add_argument(
+        "--lib-import", default=None,
+        help="Import specifier for the shared lib dir, e.g. '@/lib' (default: a relative path)",
+    )
+    parser.add_argument(
+        "--no-shared", action="store_true",
+        help="Skip transaction.repo.ts / persistence-errors.core.ts (the project already has equivalents)",
+    )
+    parser.add_argument(
+        "--gateway", "--client", dest="gateway", default=None,
+        help="Optional third-party gateway to scaffold, e.g. 'mailer' (--client is a deprecated alias)",
+    )
+    parser.add_argument(
+        "--gateway-scope", "--client-scope", dest="gateway_scope", choices=["local", "shared"], default="local",
+        help="Where to put --gateway: 'local' (feature's lib/, default) or 'shared' (lib dir, for 2+ features)",
     )
     parser.add_argument("--force", action="store_true", help="Overwrite existing files")
     args = parser.parse_args()
@@ -231,9 +331,19 @@ def main():
     camel = to_camel_case(args.feature)
 
     feature_dir = Path(args.path) / kebab
+    lib_dir = Path(args.lib_path) if args.lib_path else Path(args.path).parent / "lib"
     results = []
 
-    ctx = {"kebab": kebab, "Pascal": pascal, "camel": camel}
+    ctx = {
+        "kebab": kebab,
+        "Pascal": pascal,
+        "camel": camel,
+        "lib": lib_specifier(feature_dir, lib_dir, args.lib_import),
+    }
+
+    if not args.no_shared:
+        results.append(write_file(lib_dir / "transaction.repo.ts", TRANSACTION_REPO_TS, args.force))
+        results.append(write_file(lib_dir / "persistence-errors.core.ts", PERSISTENCE_ERRORS_CORE_TS, args.force))
 
     results.append(write_file(
         feature_dir / f"{kebab}.domain.ts", render(DOMAIN_TS, **ctx), args.force,
@@ -254,23 +364,23 @@ def main():
         feature_dir / "index.ts", render(INDEX_TS, **ctx), args.force,
     ))
 
-    if args.client:
-        client_kebab = to_kebab_case(args.client)
-        client_pascal = to_pascal_case(args.client)
-        client_ctx = {"client_kebab": client_kebab, "ClientPascal": client_pascal}
+    if args.gateway:
+        gateway_kebab = to_kebab_case(args.gateway)
+        gateway_ctx = {
+            "gateway_kebab": gateway_kebab,
+            "GatewayPascal": to_pascal_case(args.gateway),
+            "lib": lib_specifier(feature_dir / "lib", lib_dir, args.lib_import),
+        }
 
-        if args.client_scope == "shared":
-            # src/lib/ sits alongside (not inside) the features base path.
-            # If --path is e.g. src/features, shared lib is src/lib.
-            shared_lib_dir = Path(args.path).parent / "lib"
+        if args.gateway_scope == "shared":
             results.append(write_file(
-                shared_lib_dir / f"{client_kebab}.client.ts",
-                render(CLIENT_SHARED_TS, **client_ctx), args.force,
+                lib_dir / f"{gateway_kebab}.gateway.ts",
+                render(GATEWAY_SHARED_TS, **gateway_ctx), args.force,
             ))
         else:
             results.append(write_file(
-                feature_dir / "lib" / f"{client_kebab}.client.ts",
-                render(CLIENT_LOCAL_TS, **client_ctx), args.force,
+                feature_dir / "lib" / f"{gateway_kebab}.gateway.ts",
+                render(GATEWAY_LOCAL_TS, **gateway_ctx), args.force,
             ))
 
     print(f"\nScaffolded '{kebab}' feature at {feature_dir}/\n")

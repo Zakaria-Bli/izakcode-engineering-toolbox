@@ -4,7 +4,8 @@ Date: 2026-08-10
 
 ## Status
 
-Accepted
+Accepted — amended by [0005](0005-pragmatic-layered-architecture-v3.md) (cross-feature public
+API, effect ownership, transactions, `.gateway.ts`, shipped ESLint config)
 
 ## Context
 
