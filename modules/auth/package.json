@@ -45,9 +45,9 @@
     "@toolbox/eslint-config": "workspace:*",
     "@toolbox/typescript-config": "workspace:*",
     "@toolbox/vitest-config": "workspace:*",
-    "@types/node": "24.13.3",
-    "eslint": "^10.9.1",
+    "@types/node": "24.13.4",
+    "eslint": "^10.10.0",
     "typescript": "7.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.0"
   }
 }
