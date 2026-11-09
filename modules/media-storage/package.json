@@ -99,7 +99,7 @@
     "@toolbox/typescript-config": "workspace:*",
     "@toolbox/vitest-config": "workspace:*",
     "@types/node": "24.13.4",
-    "eslint": "^10.10.0",
+    "eslint": "^10.14.0",
     "sharp": "^0.35.5",
     "typescript": "7.0.2",
     "vitest": "^5.0.0"
